@@ -49,8 +49,6 @@ public class NewGradeSearchService {
     @Resource
     private StudentDao studentDao;
     @Resource
-    private UrpCourseService urpCourseService;
-    @Resource
     private NewUrpSpiderService newUrpSpiderService;
     @Resource
     private GradeDao gradeDao;
