@@ -20,7 +20,6 @@ import cn.hkxj.platform.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.lucene.search.MultiCollectorManager;
 import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -334,9 +333,7 @@ public class NewGradeSearchService {
             course.setTermYear(x.getTermYear());
             course.setTermOrder(x.getTermOrder());
             return new GradeVo()
-                    .setCourse(urpCourseService.getCourseFromCache(x.getCourseNumber(), x.getCourseOrder(),
-                            x.getTermYear(), x.getTermOrder(),
-                            course))
+                    .setCourse(course)
                     .setAccount(x.getAccount())
                     .setScore(x.getScore())
                     .setGradePoint(x.getGradePoint())
@@ -505,7 +502,9 @@ public class NewGradeSearchService {
             for (UrpGradeAndUrpCourse urpGradeAndUrpCourse : studentGrades) {
                 Double grade = urpGradeAndUrpCourse.getNewGrade().getUrpGrade().getScore();
                 //如果分数为空，就直接跳过当前元素
-                if (Objects.isNull(grade)) continue;
+                if (Objects.isNull(grade)) {
+                    continue;
+                }
                 buffer.append("考试名称：").append(urpGradeAndUrpCourse.getUrpCourse().getCourseName()).append("\n")
                         .append("成绩：").append(grade == -1 ? "" : decimalFormat.format(grade)).append("   学分：")
                         .append((decimalFormat.format(urpGradeAndUrpCourse.getUrpCourse().getCredit()))).append("\n\n");
