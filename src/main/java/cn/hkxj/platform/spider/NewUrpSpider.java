@@ -55,6 +55,7 @@ import org.springframework.data.redis.core.ValueOperations;
 
 import java.io.IOException;
 import java.net.ProxySelector;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -901,7 +902,7 @@ public class NewUrpSpider {
 
 
     private static String getContent(Request request) {
-        String content = new String(execute(request));
+        String content = new String(execute(request), StandardCharsets.UTF_8);
         if (content.contains("invalidSession") || content.contains("login")) {
             COOKIE_JAR.clearSession();
             throw new UrpSessionExpiredException("session expired");
