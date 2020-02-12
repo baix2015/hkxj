@@ -236,7 +236,7 @@ public class NewGradeSearchService {
                     CompletableFuture.completedFuture(gradeDao.getEverTermGradeByAccount(student.getAccount()));
         }else {
             schemeFuture =
-                    CompletableFuture.supplyAsync(() -> getSchemeGradeFromSpider(student), gradeAutoUpdatePool);
+                    CompletableFuture.supplyAsync(() -> getSchemeGrade(student), gradeAutoUpdatePool);
         }
 
         CompletableFuture<List<Grade>> completableFuture = currentFuture.thenCombine(schemeFuture,
@@ -361,26 +361,26 @@ public class NewGradeSearchService {
 
     }
 
-    public List<Grade> getSchemeGradeFromSpider(Student student) {
+    public List<Grade> getSchemeGrade(Student student) {
 
-        log.info("get scheme grade start");
-        long l = System.currentTimeMillis();
-        List<Grade> gradeList = newUrpSpiderService.getSchemeGrade(student)
-                .stream()
-                .map(Scheme::getCjList)
-                .flatMap(Collection::stream)
-                .map(SchemeGradeItem::transToGrade)
-                .collect(Collectors.toList());
+        List<Grade> gradeList = getSchemeGradeFromSpider(student);
 
         for (Grade grade : gradeList) {
             gradeDao.insertSelective(grade);
         }
 
-        log.info("get scheme grade finish in {}", System.currentTimeMillis() - l);
-
         addEverFinishFetchAccount(student.getAccount().toString());
         return gradeList;
 
+    }
+
+    public List<Grade> getSchemeGradeFromSpider(Student student){
+        return newUrpSpiderService.getSchemeGrade(student)
+                .stream()
+                .map(Scheme::getCjList)
+                .flatMap(Collection::stream)
+                .map(SchemeGradeItem::transToGrade)
+                .collect(Collectors.toList());
     }
 
     private Date parseGradeOperateTime(String text) {

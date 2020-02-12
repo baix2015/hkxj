@@ -215,7 +215,6 @@ public class NewUrpSpider {
 
     private final static Headers HEADERS = new Headers.Builder()
             .add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3")
-            .add("Accept-Charset", "utf-8")
             .add("Host", "xsurp.usth.edu.cn")
             .add("Connection", "keep-alive")
             .add("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36")
@@ -318,7 +317,6 @@ public class NewUrpSpider {
                 .build();
 
         String content = getContent(request);
-        log.info("grade result {}", content);
         TypeReference<List<Scheme>> typeReference = new TypeReference<List<Scheme>>() {
         };
         return parseObject(content, typeReference);
@@ -888,7 +886,6 @@ public class NewUrpSpider {
             if (isResponseFail(response)) {
                 throw new UrpRequestException(request.url().toString(), response.code(), response.message());
             }
-            log.info("response header {}", response.headers());
             ResponseBody body = response.body();
             if (body == null) {
                 throw new UrpRequestException(request.url().toString(), response.code(),
