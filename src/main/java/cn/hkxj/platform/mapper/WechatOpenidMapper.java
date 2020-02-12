@@ -3,8 +3,13 @@ package cn.hkxj.platform.mapper;
 import cn.hkxj.platform.pojo.WechatOpenid;
 import cn.hkxj.platform.pojo.WechatOpenidExample;
 import java.util.List;
-import org.apache.ibatis.annotations.Param;
 
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Repository;
+
+@Mapper
+@Repository
 public interface WechatOpenidMapper {
     int countByExample(WechatOpenidExample example);
 
