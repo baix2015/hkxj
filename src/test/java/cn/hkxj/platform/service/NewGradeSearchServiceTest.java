@@ -5,7 +5,10 @@ import cn.hkxj.platform.PlatformApplication;
 import cn.hkxj.platform.dao.StudentDao;
 import cn.hkxj.platform.exceptions.UrpEvaluationException;
 import cn.hkxj.platform.exceptions.UrpException;
-import cn.hkxj.platform.pojo.*;
+import cn.hkxj.platform.pojo.Grade;
+import cn.hkxj.platform.pojo.GradeDetail;
+import cn.hkxj.platform.pojo.Student;
+import cn.hkxj.platform.pojo.UrpGradeAndUrpCourse;
 import cn.hkxj.platform.pojo.vo.GradeResultVo;
 import cn.hkxj.platform.pojo.vo.GradeVo;
 import lombok.extern.slf4j.Slf4j;
@@ -16,8 +19,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import javax.annotation.Resource;
-import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -54,11 +55,13 @@ public class NewGradeSearchServiceTest {
 
     @Test
     public void getCurrentTermGradeFromSpider() {
-        Student student = studentDao.selectStudentByAccount(2019020856);
+        Student student = studentDao.selectStudentByAccount(2018025144);
         List<GradeDetail> gradeDetailList = newGradeSearchService.getCurrentTermGradeFromSpider(student);
         List<Grade> gradeList = gradeDetailList.stream().map(GradeDetail::getGrade).collect(Collectors.toList());
 
-        newGradeSearchService.saveUpdateGrade(gradeList);
+        for (Grade grade : gradeList) {
+            System.out.println(grade);
+        }
 
 
     }
@@ -81,8 +84,8 @@ public class NewGradeSearchServiceTest {
     }
 
     @Test
-    public void getCurrentTermGradeSync() {
-        Student student = studentDao.selectStudentByAccount(2019024639);
+    public void getCurrentTermGradeVoSync() {
+        Student student = studentDao.selectStudentByAccount(2018022512);
 
         List<GradeVo> gradeVoList = newGradeSearchService.getCurrentTermGradeVoSync(student);
 
@@ -102,8 +105,11 @@ public class NewGradeSearchServiceTest {
 
     @Test
     public void getSchemeGrade() {
-        Student student = studentDao.selectStudentByAccount(2017021517);
-        newGradeSearchService.getSchemeGradeFromSpider(student);
+        Student student = studentDao.selectStudentByAccount(2018022512);
+        for (Grade grade : newGradeSearchService.getSchemeGradeFromSpider(student)) {
+            System.out.println(grade);
+        }
+        ;
 
     }
 

@@ -1,14 +1,13 @@
 package cn.hkxj.platform.controller;
 
-import cn.hkxj.platform.config.wechat.WechatMpProProperties;
 import cn.hkxj.platform.dao.ClassDao;
 import cn.hkxj.platform.dao.StudentDao;
 import cn.hkxj.platform.exceptions.PasswordUnCorrectException;
 import cn.hkxj.platform.pojo.Classes;
-import cn.hkxj.platform.pojo.CourseTimeTableDetail;
 import cn.hkxj.platform.pojo.Student;
+import cn.hkxj.platform.pojo.WebResponse;
 import cn.hkxj.platform.service.CourseTimeTableService;
-import cn.hkxj.platform.service.NewUrpSpiderService;
+import cn.hkxj.platform.service.NewGradeSearchService;
 import cn.hkxj.platform.spider.NewUrpSpider;
 import cn.hkxj.platform.task.GradeAutoUpdateTask;
 import lombok.extern.slf4j.Slf4j;
@@ -20,14 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.util.List;
 
 @RestController
 @Slf4j
 public class TestController {
-
-    @Resource
-    private NewUrpSpiderService newUrpSpiderService;
     @Resource
     private CourseTimeTableService courseTimeTableService;
     @Resource
@@ -37,6 +32,8 @@ public class TestController {
     private ClassDao classDao;
     @Resource
     private StudentDao studentDao;
+    @Resource
+    private NewGradeSearchService newGradeSearchService;
 
     @GetMapping(value = "/getCourse")
     public void getClazz(){
@@ -70,18 +67,10 @@ public class TestController {
         return "LoginWeb/test";
     }
 
-    @RequestMapping("/testGrade")
-    public String testGrade(@RequestParam("account") int account,@RequestParam("password") String password){
+    @RequestMapping("/testEverGrade")
+    public WebResponse testGrade(@RequestParam("account") int account){
 
-        Student student = new Student();
-        student.setAccount(account);
-        student.setPassword(password);
-        Classes classes = new Classes();
-        classes.setId(316);
-//        student.setClasses(classes);
-//        GradeSearchResult gradeSearchResult = newGradeSearchService.getCurrentGrade(student);
-//        log.info(NewGradeSearchService.gradeListToText(gradeSearchResult.getData()));
-        return newUrpSpiderService.getUrpCourseTimeTable(student).toString();
+        return WebResponse.success(newGradeSearchService.getSchemeGradeFromSpider(studentDao.selectStudentByAccount(account)));
     }
 
     @RequestMapping("/testctt")
