@@ -23,11 +23,11 @@ import cn.hkxj.platform.spider.newmodel.grade.general.UrpGeneralGradeForSpider;
 import cn.hkxj.platform.spider.newmodel.grade.general.UrpGradeForSpider;
 import cn.hkxj.platform.spider.newmodel.grade.scheme.Scheme;
 import cn.hkxj.platform.spider.newmodel.searchclass.ClassInfoSearchResult;
+import cn.hkxj.platform.spider.newmodel.searchclass.CourseTimetableSearchResult;
+import cn.hkxj.platform.spider.newmodel.searchclass.SearchClassInfoPost;
 import cn.hkxj.platform.spider.newmodel.searchclassroom.SearchClassroomPost;
 import cn.hkxj.platform.spider.newmodel.searchclassroom.SearchClassroomResult;
 import cn.hkxj.platform.spider.newmodel.searchclassroom.SearchResultWrapper;
-import cn.hkxj.platform.spider.newmodel.searchclass.CourseTimetableSearchResult;
-import cn.hkxj.platform.spider.newmodel.searchclass.SearchClassInfoPost;
 import cn.hkxj.platform.spider.newmodel.searchcourse.SearchCoursePost;
 import cn.hkxj.platform.spider.newmodel.searchcourse.SearchCourseResult;
 import cn.hkxj.platform.spider.newmodel.searchteacher.SearchTeacherPost;
@@ -54,8 +54,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.net.ProxySelector;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -318,6 +316,7 @@ public class NewUrpSpider {
                 .build();
 
         String content = getContent(request);
+        log.info("grade result {}", content);
         TypeReference<List<Scheme>> typeReference = new TypeReference<List<Scheme>>() {
         };
         return parseObject(content, typeReference);
@@ -887,6 +886,7 @@ public class NewUrpSpider {
             if (isResponseFail(response)) {
                 throw new UrpRequestException(request.url().toString(), response.code(), response.message());
             }
+            log.info("response header {}", response.headers());
             ResponseBody body = response.body();
             if (body == null) {
                 throw new UrpRequestException(request.url().toString(), response.code(),
