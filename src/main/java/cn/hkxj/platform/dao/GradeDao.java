@@ -1,6 +1,6 @@
 package cn.hkxj.platform.dao;
 
-import cn.hkxj.platform.mapper.GradeMapper;
+import cn.hkxj.platform.mapper.ext.GradeExtMapper;
 import cn.hkxj.platform.pojo.Grade;
 import cn.hkxj.platform.pojo.GradeExample;
 import cn.hkxj.platform.pojo.SchoolTime;
@@ -16,13 +16,23 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GradeDao {
     @Resource
-    private GradeMapper gradeMapper;
+    private GradeExtMapper gradeExtMapper;
 
     public int insertSelective(Grade grade) {
         try {
-            return gradeMapper.insertSelective(grade);
+            return gradeExtMapper.insertSelective(grade);
         } catch (Exception e) {
             log.error("error data {}", grade, e);
+            throw e;
+        }
+
+    }
+
+    public void insertBatch(List<Grade> gradeList) {
+        try {
+            gradeExtMapper.insertBatch(gradeList);
+        } catch (Exception e) {
+            log.error("error data {}", gradeList, e);
             throw e;
         }
 
@@ -41,7 +51,7 @@ public class GradeDao {
             criteria.andTermOrderEqualTo(grade.getTermOrder());
         }
 
-        return gradeMapper.selectByExample(gradeExample);
+        return gradeExtMapper.selectByExample(gradeExample);
     }
 
 
@@ -68,7 +78,7 @@ public class GradeDao {
     }
 
     public void updateByPrimaryKeySelective(Grade grade) {
-        gradeMapper.updateByPrimaryKeySelective(grade);
+        gradeExtMapper.updateByPrimaryKeySelective(grade);
     }
 
 
@@ -81,6 +91,6 @@ public class GradeDao {
                 .andCourseOrderEqualTo(grade.getCourseOrder())
                 .andCourseNumberEqualTo(grade.getCourseNumber());
 
-        gradeMapper.updateByExampleSelective(grade, example);
+        gradeExtMapper.updateByExampleSelective(grade, example);
     }
 }

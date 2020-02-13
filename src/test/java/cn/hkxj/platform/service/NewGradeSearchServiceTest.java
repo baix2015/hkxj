@@ -12,7 +12,6 @@ import cn.hkxj.platform.pojo.Student;
 import cn.hkxj.platform.pojo.UrpGradeAndUrpCourse;
 import cn.hkxj.platform.pojo.vo.GradeResultVo;
 import cn.hkxj.platform.pojo.vo.GradeVo;
-import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,7 +20,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -60,7 +58,7 @@ public class NewGradeSearchServiceTest {
 
     @Test
     public void getCurrentTermGradeFromSpider() {
-        Student student = studentDao.selectStudentByAccount(2018025144);
+        Student student = studentDao.selectStudentByAccount(2017021554);
         List<GradeDetail> gradeDetailList = newGradeSearchService.getCurrentTermGradeFromSpider(student);
         List<Grade> gradeList = gradeDetailList.stream().map(GradeDetail::getGrade).collect(Collectors.toList());
 
@@ -73,7 +71,7 @@ public class NewGradeSearchServiceTest {
 
     @Test
     public void checkUpdate() {
-        Student student = studentDao.selectStudentByAccount(2017021546);
+        Student student = studentDao.selectStudentByAccount(2018022512);
         List<GradeDetail> gradeDetailList = newGradeSearchService.getCurrentTermGradeFromSpider(student);
         List<Grade> gradeList = gradeDetailList.stream().map(GradeDetail::getGrade).collect(Collectors.toList());
 
@@ -85,6 +83,7 @@ public class NewGradeSearchServiceTest {
             }
 
         }
+        newGradeSearchService.saveUpdateGrade(updateList);
 
     }
 
@@ -118,27 +117,12 @@ public class NewGradeSearchServiceTest {
 
     @Test
     public void getSchemeGradeFromSpider() {
-        ArrayList<Integer> integers = Lists.newArrayList(2017022634, 2018020867, 2017020742, 2017026102, 2016020963, 2016020963,
-                2016025330, 2018020760, 2018024539, 2017024189, 2017020988, 2017020993, 2017020630, 2017021063,
-                2017020998, 2018022260, 2017021304, 2015028008, 2018026052);
-
-        LinkedBlockingQueue<Integer> queue = new LinkedBlockingQueue<>(integers);
-
-        Integer account;
-        while ((account = queue.poll()) != null){
-            System.out.println(account);
-            try {
-                Student student = studentDao.selectStudentByAccount(account);
-                for (Grade grade : newGradeSearchService.getSchemeGradeFromSpider(student)) {
-                    gradeDao.updateByUniqueIndex(grade);
-                }
-            }catch (Exception e){
-                log.error("account {} error ", account, e);
-                queue.add(account);
-            }
-
+        Student student = studentDao.selectStudentByAccount(2018022512);
+        List<Grade> fromSpider = newGradeSearchService.getSchemeGradeFromSpider(student);
+        for (Grade grade : fromSpider) {
+            System.out.println(grade);
         }
-
+        gradeDao.insertBatch(fromSpider);
     }
 
 

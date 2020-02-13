@@ -30,6 +30,8 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -365,9 +367,7 @@ public class NewGradeSearchService {
 
         List<Grade> gradeList = getSchemeGradeFromSpider(student);
 
-        for (Grade grade : gradeList) {
-            gradeDao.insertSelective(grade);
-        }
+        gradeDao.insertBatch(gradeList);
 
         addEverFinishFetchAccount(student.getAccount().toString());
         return gradeList;
@@ -395,36 +395,28 @@ public class NewGradeSearchService {
      */
     public List<Grade> checkUpdate(Student student, List<Grade> gradeList) {
         List<Grade> gradeListFromDb = gradeDao.getCurrentTermGradeByAccount(student.getAccount());
+        // 如果数据库之前没有保存过该学号成绩，则直接返回抓取结果
         if (CollectionUtils.isEmpty(gradeListFromDb)) {
+            gradeList.forEach(x-> x.setUpdate(true));
             return gradeList;
         }
+        Function<Grade, String> keyMapper = grade -> grade.getCourseNumber() + grade.getCourseOrder();
 
+        BinaryOperator<Grade> binaryOperator = (oldValue, newValue) -> {
+            if (oldValue.getScore() == -1) {
+                return newValue;
+            } else {
+                return oldValue;
+            }
+        };
 
-        // 这个逻辑是处理教务网同一个课程返回两个结果
+        // 这个逻辑是处理教务网同一个课程返回两个结果，那么选择有成绩的结果
         Map<String, Grade> spiderGradeMap = gradeList.stream()
-                .collect(Collectors.toMap(x -> x.getCourseNumber() + x.getCourseOrder(), x -> x,
-                        (oldValue, newValue) -> {
-                            if (oldValue.getScore() == -1) {
-                                return newValue;
-                            } else {
-                                return oldValue;
-                            }
-                        }
-
-                ));
+                .collect(Collectors.toMap(keyMapper, x -> x,binaryOperator));
 
 
         Map<String, Grade> dbGradeMap = gradeListFromDb.stream()
-                .collect(Collectors.toMap(x -> x.getCourseNumber() + x.getCourseOrder(), x -> x,
-                        (oldValue, newValue) -> {
-                            if (oldValue.getScore() == -1) {
-                                return newValue;
-                            } else {
-                                return oldValue;
-                            }
-                        }
-
-                ));
+                .collect(Collectors.toMap(keyMapper, x -> x, binaryOperator));
 
         List<Grade> resultList = spiderGradeMap.entrySet().stream()
                 .map(entry -> {
@@ -450,13 +442,17 @@ public class NewGradeSearchService {
 
 
     public void saveUpdateGrade(List<Grade> gradeList) {
-        for (Grade grade : gradeList) {
-            if (grade.getId() != null) {
-                gradeDao.updateByPrimaryKeySelective(grade);
-            } else {
-                gradeDao.insertSelective(grade);
-            }
+        List<Grade> updateList = gradeList.stream()
+                .filter(grade -> grade.getId() != null && grade.isUpdate())
+                .collect(Collectors.toList());
+
+        List<Grade> newList = gradeList.stream()
+                .filter(grade -> grade.getId() == null)
+                .collect(Collectors.toList());
+        for (Grade grade : updateList) {
+            gradeDao.updateByPrimaryKeySelective(grade);
         }
+        gradeDao.insertBatch(newList);
 
 
     }
