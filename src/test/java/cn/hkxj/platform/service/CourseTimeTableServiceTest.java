@@ -4,11 +4,13 @@ import cn.hkxj.platform.PlatformApplication;
 import cn.hkxj.platform.dao.CourseTimeTableDao;
 import cn.hkxj.platform.dao.StudentDao;
 import cn.hkxj.platform.dao.UrpClassRoomDao;
-import cn.hkxj.platform.pojo.*;
+import cn.hkxj.platform.pojo.CourseTimeTableDetail;
+import cn.hkxj.platform.pojo.CourseTimetable;
+import cn.hkxj.platform.pojo.Student;
+import cn.hkxj.platform.pojo.UrpClassroom;
 import cn.hkxj.platform.pojo.dto.CourseTimeTableDetailDto;
 import cn.hkxj.platform.pojo.vo.CourseTimeTableVo;
 import cn.hkxj.platform.spider.newmodel.coursetimetable.UrpCourseTimeTableForSpider;
-import cn.hkxj.platform.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,7 +64,7 @@ public class CourseTimeTableServiceTest {
     @Test
     public void getCourseTimeTableByStudent() {
         Student student = studentDao.selectStudentByAccount(2017025717);
-        for (CourseTimeTableVo courseTimeTableVo : courseTimeTableService.getCourseTimeTableByStudent(student)) {
+        for (CourseTimeTableVo courseTimeTableVo : courseTimeTableService.getCurrentTermCourseTimeTableByStudent(student)) {
             System.out.println(courseTimeTableVo);
         }
 
@@ -129,7 +131,7 @@ public class CourseTimeTableServiceTest {
 
     @Test
     public void testUpdate() {
-        for (CourseTimeTableVo vo : courseTimeTableService.getCourseTimeTableByStudent(2017023437)) {
+        for (CourseTimeTableVo vo : courseTimeTableService.getCurrentTermCourseTimeTableByStudent(2017023437)) {
             System.out.println(vo);
         }
 

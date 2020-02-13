@@ -34,9 +34,6 @@ public class CourseTimeTableService {
     private static final String NO_COURSE_TEXT = "今天没有课呐，可以出去浪了~\n";
 
     private static ThreadFactory courseTimeTableThreadFactory = new ThreadFactoryBuilder().setNameFormat("courseTimeTable-pool").build();
-    private static ExecutorService saveDbPool = new ThreadPoolExecutor(1, 1,
-            0L, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<>(), courseTimeTableThreadFactory);
 
     @Resource
     private RoomService roomService;
@@ -62,8 +59,6 @@ public class CourseTimeTableService {
     private CourseTimeTableDao courseTimeTableDao;
     @Resource
     private StudentCourseTimeTableDao studentCourseTimeTableDao;
-    @Resource
-    private UrpClassRoomDao urpClassRoomDao;
     @Resource
     private TeacherCourseTimeTableDao teacherCourseTimeTableDao;
     @Resource
@@ -147,17 +142,17 @@ public class CourseTimeTableService {
 
     public List<CourseTimeTableVo> updateCourseTimeTableByStudent(int account) {
         studentCourseTimeTableDao.deleteByAccount(account);
-        return getCourseTimeTableByStudent(account);
+        return getCurrentTermCourseTimeTableByStudent(account);
     }
 
 
-    public List<CourseTimeTableVo> getCourseTimeTableByStudent(int account) {
+    public List<CourseTimeTableVo> getCurrentTermCourseTimeTableByStudent(int account) {
         Student student = studentDao.selectStudentByAccount(account);
-        return getCourseTimeTableByStudent(student);
+        return getCurrentTermCourseTimeTableByStudent(student);
     }
 
 
-    public List<CourseTimeTableVo> getCourseTimeTableByStudent(Student student) {
+    public List<CourseTimeTableVo> getCurrentTermCourseTimeTableByStudent(Student student) {
         List<Integer> idList = getCourseTimeTableIdByAccount(student.getAccount());
         if (idList.isEmpty()) {
             return getCourseTimeTableByStudentFromSpider(student);
@@ -223,8 +218,8 @@ public class CourseTimeTableService {
                 .flatMap(x -> x.values().stream().map(UrpCourseTimeTable::adapterToCourseTimetable))
                 .flatMap(Collection::stream)
                 .peek(x -> {
-                    List<UrpClassroom> urpClassroomList = urpClassRoomDao.selectByClassroom(new UrpClassroom().setName(x.getRoomName()));
-                    x.setRoomNumber(urpClassroomList.stream().findFirst().orElse(new UrpClassroom()).getNumber());
+                    UrpClassroom room = roomService.getClassRoomByName(x.getRoomName());
+                    x.setRoomNumber(room == null? "" : room.getNumber());
                 })
                 .collect(Collectors.toList());
     }

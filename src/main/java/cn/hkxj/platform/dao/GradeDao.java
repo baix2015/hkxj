@@ -6,6 +6,7 @@ import cn.hkxj.platform.pojo.GradeExample;
 import cn.hkxj.platform.pojo.SchoolTime;
 import cn.hkxj.platform.utils.DateUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -29,6 +30,9 @@ public class GradeDao {
     }
 
     public void insertBatch(List<Grade> gradeList) {
+        if(CollectionUtils.isEmpty(gradeList)){
+            return;
+        }
         try {
             gradeExtMapper.insertBatch(gradeList);
         } catch (Exception e) {
