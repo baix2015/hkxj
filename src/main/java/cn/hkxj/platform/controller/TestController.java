@@ -1,16 +1,17 @@
 package cn.hkxj.platform.controller;
 
-import cn.hkxj.platform.config.wechat.WechatMpProProperties;
 import cn.hkxj.platform.dao.ClassDao;
+import cn.hkxj.platform.dao.GradeDao;
 import cn.hkxj.platform.dao.StudentDao;
 import cn.hkxj.platform.exceptions.PasswordUnCorrectException;
 import cn.hkxj.platform.pojo.Classes;
-import cn.hkxj.platform.pojo.CourseTimeTableDetail;
+import cn.hkxj.platform.pojo.Grade;
 import cn.hkxj.platform.pojo.Student;
+import cn.hkxj.platform.pojo.WebResponse;
 import cn.hkxj.platform.service.CourseTimeTableService;
-import cn.hkxj.platform.service.NewUrpSpiderService;
+import cn.hkxj.platform.service.NewGradeSearchService;
 import cn.hkxj.platform.spider.NewUrpSpider;
-import cn.hkxj.platform.task.GradeAutoUpdateTask;
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxErrorException;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,23 +21,22 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
 
 @RestController
 @Slf4j
 public class TestController {
-
-    @Resource
-    private NewUrpSpiderService newUrpSpiderService;
     @Resource
     private CourseTimeTableService courseTimeTableService;
     @Resource
-    private GradeAutoUpdateTask gradeAutoUpdateTask;
-
+    private GradeDao gradeDao;
     @Resource
     private ClassDao classDao;
     @Resource
     private StudentDao studentDao;
+    @Resource
+    private NewGradeSearchService newGradeSearchService;
 
     @GetMapping(value = "/getCourse")
     public void getClazz(){
@@ -70,18 +70,10 @@ public class TestController {
         return "LoginWeb/test";
     }
 
-    @RequestMapping("/testGrade")
-    public String testGrade(@RequestParam("account") int account,@RequestParam("password") String password){
+    @RequestMapping("/testEverGrade")
+    public WebResponse testGrade(@RequestParam("account") int account){
 
-        Student student = new Student();
-        student.setAccount(account);
-        student.setPassword(password);
-        Classes classes = new Classes();
-        classes.setId(316);
-//        student.setClasses(classes);
-//        GradeSearchResult gradeSearchResult = newGradeSearchService.getCurrentGrade(student);
-//        log.info(NewGradeSearchService.gradeListToText(gradeSearchResult.getData()));
-        return newUrpSpiderService.getUrpCourseTimeTable(student).toString();
+        return WebResponse.success(newGradeSearchService.getSchemeGrade(studentDao.selectStudentByAccount(account)));
     }
 
     @RequestMapping("/testctt")
@@ -117,9 +109,30 @@ public class TestController {
 
     @RequestMapping("/update")
     public String testGrade(){
-        gradeAutoUpdateTask.autoUpdateGrade();
+        ArrayList<Integer> integers = Lists.newArrayList(2017022634, 2018020867, 2017020742, 2017026102, 2016020963, 2016020963,
+                2016025330, 2018020760, 2018024539, 2017024189, 2017020988, 2017020993, 2017020630, 2017021063,
+                2017020998, 2018022260, 2017021304, 2015028008, 2018026052);
+
+        LinkedBlockingQueue<Integer> queue = new LinkedBlockingQueue<>(integers);
+
+        Integer account;
+        while ((account = queue.poll()) != null){
+            System.out.println(account);
+            try {
+                Student student = studentDao.selectStudentByAccount(account);
+                for (Grade grade : newGradeSearchService.getSchemeGradeFromSpider(student)) {
+                    gradeDao.updateByUniqueIndex(grade);
+                }
+            }catch (Exception e){
+                log.error("account {} error ", account, e);
+                queue.add(account);
+            }
+
+        }
         return "ok";
     }
+
+
 
 
     public static void main(String[] args) throws IOException {
