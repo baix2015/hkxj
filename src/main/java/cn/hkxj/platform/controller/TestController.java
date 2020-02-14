@@ -3,8 +3,6 @@ package cn.hkxj.platform.controller;
 import cn.hkxj.platform.dao.ClassDao;
 import cn.hkxj.platform.dao.GradeDao;
 import cn.hkxj.platform.dao.StudentDao;
-import cn.hkxj.platform.exceptions.PasswordUnCorrectException;
-import cn.hkxj.platform.pojo.Classes;
 import cn.hkxj.platform.pojo.Grade;
 import cn.hkxj.platform.pojo.Student;
 import cn.hkxj.platform.pojo.WebResponse;
@@ -13,7 +11,6 @@ import cn.hkxj.platform.service.NewGradeSearchService;
 import cn.hkxj.platform.spider.NewUrpSpider;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
-import me.chanjar.weixin.common.error.WxErrorException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -38,32 +35,6 @@ public class TestController {
     @Resource
     private NewGradeSearchService newGradeSearchService;
 
-    @GetMapping(value = "/getCourse")
-    public void getClazz(){
-
-        for (Classes classes : classDao.getAllClass()) {
-            if(classes.getYear() > 15){
-                for (Student student : studentDao.selectStudentByClassId(classes.getId())) {
-                    try {
-                        log.info("class {} student {} start",classes.getId(), student.getName());
-                        courseTimeTableService.getAllCourseTimeTableDetails(student);
-                        log.info("class {} student {} success",classes.getId(), student.getName());
-                        break;
-                    }catch (PasswordUnCorrectException e){
-                        studentDao.updatePasswordUnCorrect(student.getAccount());
-                        log.error("class {} student {} password not correct", classes.getId(), student.getName());
-                    } catch (Exception e){
-                        log.error("class {} student {} fail",classes.getId(), student.getName(), e);
-                    }
-
-                }
-
-            }
-
-        }
-
-
-    }
 
     @GetMapping(value = "/testhtml")
     public String courseTimeTable(){
@@ -74,17 +45,6 @@ public class TestController {
     public WebResponse testGrade(@RequestParam("account") int account){
 
         return WebResponse.success(newGradeSearchService.getSchemeGrade(studentDao.selectStudentByAccount(account)));
-    }
-
-    @RequestMapping("/testctt")
-    public void testCourseTimeTable() throws WxErrorException {
-        Student student = new Student();
-        Classes classes = new Classes();
-        student.setAccount(2017026003);
-        student.setPassword("1");
-        classes.setId(503);
-//        student.setClasses(classes);
-        System.out.println(courseTimeTableService.convertToText(courseTimeTableService.getDetailsForCurrentDay(student)));
     }
 
 
