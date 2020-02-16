@@ -102,7 +102,7 @@ public class NewGradeSearchServiceTest {
 
     @Test
     public void getSchemeGrade() {
-        Student student = studentDao.selectStudentByAccount(2017021517);
+        Student student = studentDao.selectStudentByAccount(2017025151);
         newGradeSearchService.getSchemeGradeFromSpider(student);
 
     }
