@@ -6,6 +6,7 @@ import cn.hkxj.platform.config.wechat.WechatTemplateProperties;
 import cn.hkxj.platform.pojo.CourseTimeTableDetail;
 import cn.hkxj.platform.pojo.ScheduleTask;
 import cn.hkxj.platform.pojo.Student;
+import cn.hkxj.platform.pojo.WechatOpenid;
 import cn.hkxj.platform.pojo.constant.MiniProgram;
 import cn.hkxj.platform.pojo.constant.SubscribeScene;
 import cn.hkxj.platform.pojo.wechat.Openid;
@@ -77,7 +78,8 @@ public class CourseMessageHandler implements WxMpMessageHandler {
     }
 
     private String getReplyContent(WxMpXmlMessage wxMpXmlMessage, WxMpService wxMpService){
-        Openid openid = openIdService.getOpenid(wxMpXmlMessage.getFromUser(), wxMpService.getWxMpConfigStorage().getAppId()).get(0);
+        /*Openid openid = openIdService.getOpenid(wxMpXmlMessage.getFromUser(), wxMpService.getWxMpConfigStorage().getAppId()).get(0);*/
+        WechatOpenid openid = openIdService.getOpenid(wxMpXmlMessage.getFromUser(), wxMpService.getWxMpConfigStorage().getAppId()).get(0);//后添加的代码代替上面的一行代码
         Student student = openIdService.getStudentByOpenId(openid.getOpenid(), wxMpService.getWxMpConfigStorage().getAppId());
         List<CourseTimeTableDetail> details = courseTimeTableService.getDetailsForCurrentDay(student);
         return courseTimeTableService.convertToText(details);

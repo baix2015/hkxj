@@ -1,7 +1,11 @@
 package cn.hkxj.platform.pojo;
 
-import java.util.Date;
+import lombok.Data;
+import lombok.experimental.Accessors;
 
+import java.util.Date;
+@Data
+@Accessors(chain = true)
 public class WechatOpenid {
     private Integer id;
 
@@ -17,7 +21,7 @@ public class WechatOpenid {
 
     private String appid;
 
-    public Integer getId() {
+   /* public Integer getId() {
         return id;
     }
 
@@ -71,5 +75,5 @@ public class WechatOpenid {
 
     public void setAppid(String appid) {
         this.appid = appid == null ? null : appid.trim();
-    }
+    }*/
 }
