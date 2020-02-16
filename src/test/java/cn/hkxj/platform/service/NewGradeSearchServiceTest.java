@@ -10,7 +10,6 @@ import cn.hkxj.platform.pojo.Grade;
 import cn.hkxj.platform.pojo.GradeDetail;
 import cn.hkxj.platform.pojo.Student;
 import cn.hkxj.platform.pojo.UrpGradeAndUrpCourse;
-import cn.hkxj.platform.pojo.vo.GradeResultVo;
 import cn.hkxj.platform.pojo.vo.GradeVo;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -117,21 +116,17 @@ public class NewGradeSearchServiceTest {
 
     @Test
     public void getSchemeGradeFromSpider() {
-        Student student = studentDao.selectStudentByAccount(2018022512);
-        List<Grade> fromSpider = newGradeSearchService.getSchemeGradeFromSpider(student);
-        for (Grade grade : fromSpider) {
-            System.out.println(grade);
+        Student student = studentDao.selectStudentByAccount(2018025144);
+
+        for (Grade grade : newGradeSearchService.getSchemeGradeFromSpider(student)) {
+            gradeDao.updateByUniqueIndex(grade);
         }
-        gradeDao.insertBatch(fromSpider);
     }
 
 
     @Test
     public void getGrade() {
         Student student = studentDao.selectStudentByAccount(2016021728);
-        for (int x = 0; x < 2; x++) {
-            GradeResultVo grade = newGradeSearchService.getGrade(student);
-        }
 
     }
 

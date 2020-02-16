@@ -240,34 +240,38 @@ public class NewUrpSpider {
         MDC.remove("preLoad");
         this.account = account;
         this.password = password;
-        if (hasLoginCookieCache(account)) {
-            return;
-        }
-        PreLoadCaptcha preLoadCaptcha;
-        VerifyCode verifyCode = null;
-
-        while ((preLoadCaptcha = queue.poll()) != null) {
-            if (!preLoadCaptcha.isExpire()) {
-                MDC.put("preLoad", preLoadCaptcha.preloadCookieId);
-                verifyCode = preLoadCaptcha.captcha;
-                break;
+        synchronized (this.account.intern()){
+            if (hasLoginCookieCache(account)) {
+                log.info("account {} has login", account);
+                return;
             }
+            PreLoadCaptcha preLoadCaptcha;
+            VerifyCode verifyCode = null;
+            log.info("account {} start login", account);
+            while ((preLoadCaptcha = queue.poll()) != null) {
+                if (!preLoadCaptcha.isExpire()) {
+                    MDC.put("preLoad", preLoadCaptcha.preloadCookieId);
+                    verifyCode = preLoadCaptcha.captcha;
+                    break;
+                }
+            }
+            if (verifyCode == null) {
+                verifyCode = getCaptcha();
+            }
+
+            Base64.Encoder encoder = Base64.getEncoder();
+
+            UUID uuid = UUID.randomUUID();
+            HashOperations<String, String, String> opsForHash = stringRedisTemplate.opsForHash();
+
+            opsForHash.put(RedisKeys.CAPTCHA.getName(), uuid.toString(), encoder.encodeToString(verifyCode.getData().clone()));
+            String code = CaptchaBreaker.getCode(uuid.toString());
+
+            studentCheck(account, password, code, uuid.toString());
+
+            opsForHash.delete(RedisKeys.CAPTCHA.getName(), uuid.toString());
         }
-        if (verifyCode == null) {
-            verifyCode = getCaptcha();
-        }
 
-        Base64.Encoder encoder = Base64.getEncoder();
-
-        UUID uuid = UUID.randomUUID();
-        HashOperations<String, String, String> opsForHash = stringRedisTemplate.opsForHash();
-
-        opsForHash.put(RedisKeys.CAPTCHA.getName(), uuid.toString(), encoder.encodeToString(verifyCode.getData().clone()));
-        String code = CaptchaBreaker.getCode(uuid.toString());
-
-        studentCheck(account, password, code, uuid.toString());
-
-        opsForHash.delete(RedisKeys.CAPTCHA.getName(), uuid.toString());
     }
 
     /**

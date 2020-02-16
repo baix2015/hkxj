@@ -280,7 +280,6 @@ public class CourseTimeTableService {
                 .setStudentId(account)
                 .setTermOrder(schoolTime.getTerm().getOrder())
                 .setTermYear(schoolTime.getTerm().getTermYear());
-        courseTimeTableDao.selectByStudentRelative(table);
         return courseTimeTableDao.selectByStudentRelative(table);
     }
 
