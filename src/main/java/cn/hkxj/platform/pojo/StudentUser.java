@@ -132,4 +132,23 @@ public class StudentUser {
     public void setClassName(String className) {
         this.className = className == null ? null : className.trim();
     }
+
+    @Override
+    public String toString() {
+        return "StudentUser{" +
+                "id=" + id +
+                ", account=" + account +
+                ", password='" + password + '\'' +
+                ", name='" + name + '\'' +
+                ", sex='" + sex + '\'' +
+                ", ethnic='" + ethnic + '\'' +
+                ", urpclassNum=" + urpclassNum +
+                ", isCorrect=" + isCorrect +
+                ", gmtCreate=" + gmtCreate +
+                ", gmtModified=" + gmtModified +
+                ", academyName='" + academyName + '\'' +
+                ", subjectName='" + subjectName + '\'' +
+                ", className='" + className + '\'' +
+                '}';
+    }
 }
