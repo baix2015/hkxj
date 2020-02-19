@@ -25,18 +25,18 @@ import static org.junit.Assert.*;
 @WebAppConfiguration
 public class ExcelServiceTest {
 
-    @Resource
-    private ExcelService excelService;
+   /* @Resource
+    private ExcelService excelService;*/
     @Resource
     private OpenidPlusMapper openidPlusMapper;
     @Resource
     private WechatOpenidMapper wechatOpenidMapper;
 
 
-    @Test
+    /*@Test
     public void isDistinct(){
         System.out.println(excelService.lastIndexOfNum("14-16单周上"));;
-    }
+    }*/
 
     @Test
     public void readExcel() {
