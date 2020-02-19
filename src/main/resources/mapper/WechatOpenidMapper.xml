@@ -240,4 +240,18 @@
       appid = #{appid,jdbcType=VARCHAR}
     where id = #{id,jdbcType=INTEGER}
   </update>
+
+  <!--接口中添加了isOpenidBind方法，所以在此添加对应的sql-->
+  <select id="isOpenidBind" parameterType="String" resultType="int">
+    select is_bind from wechat_openid where openid = #{value}
+  </select>
+
+  <!--接口中添加了openidUnbind方法，所以在此添加对应的sql-->
+  <update id="openidUnbind" parameterType="String">
+    update wechat_openid set is_bind = false where openid=#{openid}
+  </update>
+  <!--接口中添加了getAllOpenidsFromOneClass方法，所以在此添加对应的sql-->
+  <select id="getAllOpenidsFromOneClass" resultType="String">
+    select openid from wechat_openid o where account IN (select account from student where class_id = #{classId}) and o.openid != #{openid} and o.is_bind = 1
+  </select>
 </mapper>
