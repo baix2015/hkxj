@@ -57,6 +57,7 @@ public class WechatOpenidTest {
            wechatOpenid.setOpenid(openids.get(i).getOpenid());
            wechatOpenid.setAppid("wx2212ea680ca5c05d");
            wechatOpenidMapper.insert(wechatOpenid);
+           //wechatOpenidMapper.insertSelective(wechatOpenid);
        }
         System.out.println("数据插入完成");
 
@@ -66,8 +67,6 @@ public class WechatOpenidTest {
     //又遇到一个APPID重复的值：oDUpSs8B8-vr4TPruTy2XPSyPg3U/////oDUpSs8B8-vr4TPruTy2XPSyPg3U
     //wechat_openid:oDUpSs8B8-vr4TPruTy2XPSyPg3U的数据id=1083
     //Openid_plus里面的数据学号是：2014025838
-
-
     //两张表插入的最后一条数据id=7630
     @Test//测试从Openid_plus表中拿出数据插入到WeChatopenid表
     public void insertWechat_openidFromOpenid_plus(){
@@ -85,11 +84,13 @@ public class WechatOpenidTest {
             wechatOpenid.setOpenid(openids.get(i).getOpenid());
             wechatOpenid.setAppid("wx541fd36e6b400648");
             wechatOpenidMapper.insert(wechatOpenid);
+           // wechatOpenidMapper.insertSelective(wechatOpenid);
         }
         System.out.println("数据插入完成");
 
     }
 
+    //MiniProgramOpenid表杨新华同学负责导入数据，所以线面的代码没有运行测试过
     @Test//测试从MiniProgramOpenid表中拿出数据插入到WeChatopenid表
     public void insertWechat_openidFromMiniProgramOpenid(){
         WechatOpenid wechatOpenid=new WechatOpenid();
@@ -116,11 +117,8 @@ public class WechatOpenidTest {
     public void getobjectwithtime(){
        /* Openid openid = openidMapper.selectByPrimaryKey(208);
         System.out.println(openid.getGmtCreate());
-
         Openid openid1 = openidPlusMapper.selectByPrimaryKey(1);
         System.out.println(openid1.getGmtCreate());*/
-
-
         List<Openid> openids = openidMapper.selectByExample(new OpenidExample());
         System.out.println("openid总数据："+openids.size());
         System.out.println(openids.get(0).getGmtCreate());
