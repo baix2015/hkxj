@@ -8,10 +8,8 @@ import cn.hkxj.platform.mapper.WechatOpenidMapper;
 import cn.hkxj.platform.pojo.MiniProgramOpenid;
 import cn.hkxj.platform.pojo.MiniProgramOpenidExample;
 import cn.hkxj.platform.pojo.WechatOpenid;
-import cn.hkxj.platform.pojo.WechatOpenidExample;
 import cn.hkxj.platform.pojo.example.OpenidExample;
 import cn.hkxj.platform.pojo.wechat.Openid;
-import cn.hkxj.platform.service.NewUrpSpiderService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,8 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.lang.reflect.Method;
-import java.text.SimpleDateFormat;
 import java.util.List;
 
 @Slf4j
@@ -128,14 +124,9 @@ public class WechatOpenidTest {
 
 
 
-    @Test//测试一下continue的使用
+    @Test
     public void test1() {
-        for( int i=0;i<10;i++){
-            if(i==5){
-                continue;
-            }
-            System.out.println(i);
-        }
+
 
     }
 

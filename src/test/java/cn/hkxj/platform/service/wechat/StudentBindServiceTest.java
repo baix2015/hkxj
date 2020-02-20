@@ -1,5 +1,6 @@
 package cn.hkxj.platform.service.wechat;
 
+import cn.hkxj.platform.dao.StudentDao;
 import cn.hkxj.platform.pojo.Student;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -14,10 +15,19 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class StudentBindServiceTest {
     @Autowired
     StudentBindService studentBindService;
+    @Autowired
+    StudentDao studentDao;
+
+    @Test
+    public void studentLogin() {
+        Student student = studentBindService.studentLogin("2016023344", "1");
+        assert student != null;
+    }
 
     @Test
     public void studentBind() {
-        Student student = studentBindService.studentLogin("2016023344", "1");
+        Student student = studentDao.selectStudentByAccount(2016023344);
+        studentBindService.studentBind(student, "o6393wvmheXId6z3pO9hPsZrI2VQ", "test");
         assert student != null;
     }
 
