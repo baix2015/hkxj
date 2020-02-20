@@ -108,6 +108,7 @@ public class NewGradeSearchServiceTest {
 
     @Test
     public void getSchemeGrade() {
+
         Student student = studentDao.selectStudentByAccount(2018022512);
         for (Grade grade : newGradeSearchService.getSchemeGrade(student)) {
             System.out.println(grade);
