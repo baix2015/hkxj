@@ -62,12 +62,7 @@ public class StudentUserMigrationUtilTest{
 
     @Test
     public void main() throws Exception {
-        ArrayBlockingQueue arrayBlockingQueue = new ArrayBlockingQueue(512);
-        MDCThreadPool mdcThreadPool = new MDCThreadPool(4,8,0L,TimeUnit.MILLISECONDS,
-                arrayBlockingQueue,r -> new Thread(r, "studentMigration"));
-       for (int i=0; i<15 ;i++){
-           //mdcThreadPool.submit(this);
-       }
+        //
     }
 
     @Test
