@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
  * @author junrong.chen
  */
 public class MDCThreadPool extends ThreadPoolExecutor {
-    public MDCThreadPool(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory) {
+    public MDCThreadPool(int corePoolSize, int maximumPoolSize, long keepAliveTime  , TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
     }
 
