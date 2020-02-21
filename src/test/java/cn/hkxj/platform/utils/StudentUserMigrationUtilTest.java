@@ -4,10 +4,11 @@ import cn.hkxj.platform.MDCThreadPool;
 import cn.hkxj.platform.PlatformApplication;
 import cn.hkxj.platform.dao.StudentDao;
 import cn.hkxj.platform.dao.StudentUserDao;
+import cn.hkxj.platform.exceptions.PasswordUnCorrectException;
+import cn.hkxj.platform.exceptions.UrpException;
 import cn.hkxj.platform.pojo.Student;
 import cn.hkxj.platform.pojo.StudentUser;
 import cn.hkxj.platform.service.wechat.StudentBindService;
-import com.google.common.collect.Lists;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -34,13 +35,11 @@ public class StudentUserMigrationUtilTest{
     @Resource
     private StudentBindService studentBindService;
 
-    private int count=0;
-    private int fail = 0;
 
 
     @Test
     public void studentMigration() throws Exception {
-        ArrayList<Student> studentList = Lists.newArrayList(studentDao.selectStudentByAccount(2014025838));
+        List<Student> studentList = studentDao.selectAllStudent();
         //查询数据库所有的班级信息，并存入Map集合
         ExecutorService pool = new MDCThreadPool(4, 4,
                 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), r -> new Thread(r, "student"));
@@ -58,6 +57,9 @@ public class StudentUserMigrationUtilTest{
                     System.out.println(userInfo);
                     studentUserDao.insertStudentSelective(userInfo);
                 }catch (Exception e){
+                    if( (e instanceof PasswordUnCorrectException) || (e instanceof UrpException)){
+                        return;
+                    }
                     e.printStackTrace();
                     vector.add(student.getAccount().toString());
                 }finally {
