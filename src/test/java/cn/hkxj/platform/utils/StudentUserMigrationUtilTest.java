@@ -1,45 +1,32 @@
 package cn.hkxj.platform.utils;
 
-import cn.hkxj.platform.MDCThreadPool;
 import cn.hkxj.platform.PlatformApplication;
-import cn.hkxj.platform.dao.ClassDao;
 import cn.hkxj.platform.dao.StudentDao;
 import cn.hkxj.platform.dao.StudentUserDao;
 import cn.hkxj.platform.dao.UrpClassDao;
-import cn.hkxj.platform.exceptions.PasswordUnCorrectException;
-import cn.hkxj.platform.exceptions.UrpEvaluationException;
-import cn.hkxj.platform.exceptions.UrpSessionExpiredException;
-import cn.hkxj.platform.exceptions.UrpVerifyCodeException;
 import cn.hkxj.platform.pojo.Student;
 import cn.hkxj.platform.pojo.StudentUser;
-import cn.hkxj.platform.pojo.StudentUserExample;
 import cn.hkxj.platform.pojo.UrpClass;
-import cn.hkxj.platform.pojo.example.StudentExample;
 import cn.hkxj.platform.service.NewUrpSpiderService;
 import cn.hkxj.platform.spider.NewUrpSpider;
 import cn.hkxj.platform.spider.model.UrpStudentInfo;
 import cn.hkxj.platform.spider.newmodel.SearchResult;
 import cn.hkxj.platform.spider.newmodel.searchclass.ClassInfoSearchResult;
 import cn.hkxj.platform.spider.newmodel.searchclass.SearchClassInfoPost;
-import io.lettuce.core.ScriptOutputType;
-import lombok.SneakyThrows;
 import org.junit.Test;
-import org.junit.platform.commons.util.StringUtils;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.junit4.SpringRunner;
+
 import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import static cn.hkxj.platform.utils.DESUtil.DESEncrypt;
+
+import static cn.hkxj.platform.utils.DESUtil.encrypt;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = PlatformApplication.class)
@@ -54,22 +41,16 @@ public class StudentUserMigrationUtilTest{
     private UrpClassDao urpClassDao;
     @Resource
     private NewUrpSpiderService newUrpSpiderService;
-    @Resource
-    private StudentUserMigrationUtilTest studentUserMigrationUtilTest;
 
     private int count=0;
     private int fail = 0;
 
-    @Test
-    public void main() throws Exception {
-        //
-    }
 
     @Test
     public void studentMigration() throws Exception {
         List<Student> studentList = studentDao.selectAllStudent();
         //查询数据库所有的班级信息，并存入Map集合
-        Map<String,UrpClass> urpClassMap = new HashMap<String, UrpClass>();
+        Map<String,UrpClass> urpClassMap = new HashMap<>();
         List<UrpClass> urpClasses = urpClassDao.selectAllClass();
         for (UrpClass urpClass : urpClasses) {
             urpClassMap.put(urpClass.getClassName().trim(),urpClass);
@@ -79,7 +60,7 @@ public class StudentUserMigrationUtilTest{
             StudentUser studentUser = new StudentUser();
             //首先将student原有字段赋给studentUser
             studentUser.setAccount(student.getAccount());
-            studentUser.setPassword(DESEncrypt(student.getAccount().toString(), student.getPassword()));
+            studentUser.setPassword(encrypt(student.getAccount().toString(), student.getPassword()));
             studentUser.setName(student.getName());
             studentUser.setSex(student.getSex());
             studentUser.setEthnic(student.getEthnic());
@@ -103,43 +84,6 @@ public class StudentUserMigrationUtilTest{
                 studentUser.setSubjectName(null);
                 studentUser.setClassName(null);
             }
-
-//            catch (UrpVerifyCodeException e){
-//                //当识别验证码出错时，重试
-//                try {
-//                    NewUrpSpider newUrpSpider = new NewUrpSpider(student.getAccount().toString(), student.getPassword());
-//                    UrpStudentInfo urpStudentInfo = newUrpSpider.getStudentInfo();
-//
-//                    studentUser.setAcademyName(urpStudentInfo.getAcademy());
-//                    studentUser.setSubjectName(urpStudentInfo.getMajor());
-//                    studentUser.setClassName(urpStudentInfo.getClassname());
-//                    studentUser.setUrpclassNum(getUrpClassNum(urpStudentInfo.getClassname()));
-//                } catch (Exception ex){
-//
-//                }
-//            } catch (UrpSessionExpiredException e){
-//                //用户会话过期
-//                try {
-//                    NewUrpSpider newUrpSpider = new NewUrpSpider(student.getAccount().toString(), student.getPassword());
-//                    UrpStudentInfo urpStudentInfo = newUrpSpider.getStudentInfo();
-//
-//                    studentUser.setAcademyName(urpStudentInfo.getAcademy());
-//                    studentUser.setSubjectName(urpStudentInfo.getMajor());
-//                    studentUser.setClassName(urpStudentInfo.getClassname());
-//                    studentUser.setUrpclassNum(getUrpClassNum(urpStudentInfo.getClassname()));
-//                } catch (Exception ex){
-//
-//                }
-//            } catch (UrpEvaluationException e) {
-//                //当用户未评教时就不再抓取信息，传入一个值
-//                studentUser.setUrpclassNum(0000000000);
-//                studentUser.setAcademyName(null);
-//                studentUser.setSubjectName(null);
-//                studentUser.setClassName(null);
-//            }   catch (PasswordUnCorrectException e){
-//                // 密码不正确，不处理，跳过
-//            }
-
             //尝试写入数据库
             try {
                 if (studentUserDao.isStudentAccountExists(student.getAccount())) {
@@ -195,4 +139,6 @@ public class StudentUserMigrationUtilTest{
             }
         }
     }
+
+
 }

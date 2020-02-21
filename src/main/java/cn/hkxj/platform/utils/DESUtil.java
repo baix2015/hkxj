@@ -2,7 +2,6 @@ package cn.hkxj.platform.utils;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.Cipher;
@@ -16,8 +15,6 @@ import java.util.Base64;
 @Component
 @Slf4j
 public class DESUtil {
-    @Value("${secret_salt}")
-    private static String salt;
 
     /**
      * 获取加密后的密文密码
@@ -26,18 +23,18 @@ public class DESUtil {
      * @return 返回加密后的密文密码
      * @throws Exception
      */
-    public static String DESEncrypt(String account, String password) throws Exception {
-        if(StringUtils.isEmpty(account) || StringUtils.isEmpty(password)){
+    public static String encrypt(String text, String salt) {
+        if(StringUtils.isEmpty(text) || StringUtils.isEmpty(salt)){
             throw new RuntimeException("DES加密时用户名或密码为空");
         }
         else{
             try {
-                SecretKey secretKey = generateKey(account+salt);
+                SecretKey secretKey = generateKey(salt);
                 byte[] enCodeFormat = secretKey.getEncoded();
                 SecretKeySpec key = new SecretKeySpec(enCodeFormat, "DES");
-                Cipher cipher = Cipher.getInstance("DES");// 创建密码器
-                byte[] byteContent = password.getBytes(StandardCharsets.UTF_8);
-                cipher.init(Cipher.ENCRYPT_MODE, key);// 初始化
+                Cipher cipher = Cipher.getInstance("DES");
+                byte[] byteContent = text.getBytes(StandardCharsets.UTF_8);
+                cipher.init(Cipher.ENCRYPT_MODE, key);
                 byte[] result = Base64.getEncoder().encode(cipher.doFinal(byteContent));
                 return new String(result);
             }
@@ -49,38 +46,30 @@ public class DESUtil {
 
     /**
      * 获取解密后的明文密码
-     * @param account 学号
-     * @param password 加密后的密码文件（一般从数据库读取）
+     * @param text 学号
+     * @param salt 加密后的密码文件（一般从数据库读取）
      * @return 返回解密后的明文密码
      * @throws Exception
      */
-    public static String DESDecrypt(String account, String password) throws Exception {
-        if(StringUtils.isEmpty(account) || StringUtils.isEmpty(password)) {
+    public static String decrypt(String text, String salt) {
+        if(StringUtils.isEmpty(text) || StringUtils.isEmpty(salt)) {
             throw new RuntimeException("DES解密时用户名或密码为空");
         }
         else{
             try {
-                byte[] contentbyte = Base64.getDecoder().decode(password);
-                SecretKey secretKey = generateKey(account+salt);
+                byte[] contentByte = Base64.getDecoder().decode(text);
+                SecretKey secretKey = generateKey(salt);
                 byte[] enCodeFormat = secretKey.getEncoded();
                 SecretKeySpec key = new SecretKeySpec(enCodeFormat, "DES");
-                Cipher cipher = Cipher.getInstance("DES");// 创建密码器
-                cipher.init(Cipher.DECRYPT_MODE, key);// 初始化
-                byte[] result = cipher.doFinal(contentbyte);
+                Cipher cipher = Cipher.getInstance("DES");
+                cipher.init(Cipher.DECRYPT_MODE, key);
+                byte[] result = cipher.doFinal(contentByte);
                 return new String(result);
             }
             catch (Exception e){
                 throw new RuntimeException(e);
             }
         }
-    }
-
-    /**
-     * 获取加密用的salt
-     * @return
-     */
-    private static String getSalt(){
-        return salt;
     }
 
     /**
@@ -92,11 +81,19 @@ public class DESUtil {
         try {
             SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("DES");
             DESKeySpec keySpec = new DESKeySpec(salt.getBytes(StandardCharsets.UTF_8));
-            SecretKey secretKey = keyFactory.generateSecret(keySpec);
             return keyFactory.generateSecret(keySpec);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception e){
+            throw new RuntimeException(e);
         }
-        return null;
     }
+
+
+    public static void main(String[] args) {
+
+        String encrypt = encrypt("1", "2014025838");
+        String decrypt = decrypt(encrypt, "2014025838");
+        System.out.println(decrypt);
+    }
+
+
 }
