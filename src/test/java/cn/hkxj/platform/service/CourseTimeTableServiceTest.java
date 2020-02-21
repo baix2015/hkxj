@@ -72,7 +72,7 @@ public class CourseTimeTableServiceTest {
 
     @Test
     public void getCourseTimeTableByStudentFromSpider() {
-        Student student = studentDao.selectStudentByAccount(2016024986);
+        Student student = studentDao.selectStudentByAccount(2017023742);
         for (CourseTimeTableVo vo : courseTimeTableService.getCourseTimeTableByStudentFromSpider(student)) {
             System.out.println(vo);
         }
@@ -98,10 +98,10 @@ public class CourseTimeTableServiceTest {
     @Test
     public void fixErrorData() {
         // 按学生分好组，然后再进行抓取
-        UrpCourseTimeTableForSpider details = courseTimeTableService.getCourseTimeTableDetails(studentDao.selectStudentByAccount(2018026135));
+        UrpCourseTimeTableForSpider details = courseTimeTableService.getCourseTimeTableDetails(studentDao.selectStudentByAccount(2017023742));
         List<CourseTimetable> collect = details.adaptToList().stream().filter(CourseTimetable::isCurrentTerm).collect(Collectors.toList());
 
-        System.out.println(collect.size());
+        courseTimeTableService.transCourseTimeTableToVo(collect);
 
 
     }
