@@ -567,7 +567,8 @@ public class NewUrpSpider {
         student.setName(userInfo.get("姓名"));
         student.setMajor(userInfo.get("专业"));
         student.setAcademy(userInfo.get("院系"));
-        student.setClassname(userInfo.get("班级"));
+        String s = userInfo.get("班级");
+        student.setClassname(s.endsWith("班") ? s.substring(0, s.length()-1): s);
         student.setPassword(password);
         flashCache();
         return student;

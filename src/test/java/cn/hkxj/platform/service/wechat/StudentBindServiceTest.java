@@ -34,7 +34,7 @@ public class StudentBindServiceTest {
 
     @Test
     public void getStudentUserInfo() {
-        Student student = studentDao.selectStudentByAccount(2014025838);
+        Student student = studentDao.selectStudentByAccount(2015023299);
         StudentUser studentUserInfo = studentBindService.getStudentUserInfo(student.getAccount().toString(), student.getPassword());
 
         System.out.println(studentUserInfo);
