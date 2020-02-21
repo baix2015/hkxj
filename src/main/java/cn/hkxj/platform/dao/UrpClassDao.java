@@ -1,6 +1,6 @@
 package cn.hkxj.platform.dao;
 
-import cn.hkxj.platform.mapper.UrpClassMapper;
+import cn.hkxj.platform.mapper.ext.UrpClassExtMapper;
 import cn.hkxj.platform.pojo.UrpClass;
 import cn.hkxj.platform.pojo.example.UrpClassExample;
 import org.springframework.stereotype.Service;
@@ -11,10 +11,10 @@ import java.util.List;
 @Service
 public class UrpClassDao {
     @Resource
-    private UrpClassMapper urpClassMapper;
+    private UrpClassExtMapper urpClassExtMapper;
 
     public List<UrpClass> selectAllClass(){
-        return urpClassMapper.selectByExample(new UrpClassExample());
+        return urpClassExtMapper.selectByExample(new UrpClassExample());
     }
 
     public UrpClass selectByClassNumber(String classNumber){
@@ -22,7 +22,7 @@ public class UrpClassDao {
         example.createCriteria()
                 .andClassNumEqualTo(classNumber);
 
-        return urpClassMapper.selectByExample(example).stream().findFirst().orElse(null);
+        return urpClassExtMapper.selectByExample(example).stream().findFirst().orElse(null);
 
     }
 
@@ -32,11 +32,15 @@ public class UrpClassDao {
         example.createCriteria()
                 .andClassNameEqualTo(name);
 
-        return urpClassMapper.selectByExample(example).stream().findFirst().orElse(null);
+        return urpClassExtMapper.selectByExample(example).stream().findFirst().orElse(null);
     }
 
     public void insertSelective(UrpClass urpClass){
-        urpClassMapper.insertSelective(urpClass);
+        urpClassExtMapper.insertSelective(urpClass);
+    }
+
+    public void insertBatch(List<UrpClass> list){
+        urpClassExtMapper.insertBatch(list);
     }
 
 }

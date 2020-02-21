@@ -1,10 +1,10 @@
 package cn.hkxj.platform.service;
 
-import cn.hkxj.platform.dao.CourseDao;
-import cn.hkxj.platform.dao.CourseTimeTableDao;
-import cn.hkxj.platform.dao.TeacherDao;
-import cn.hkxj.platform.dao.UrpClassRoomDao;
-import cn.hkxj.platform.mapper.*;
+import cn.hkxj.platform.dao.*;
+import cn.hkxj.platform.mapper.ClassCourseMapper;
+import cn.hkxj.platform.mapper.ClassCourseTimetableMapper;
+import cn.hkxj.platform.mapper.TeacherCourseMapper;
+import cn.hkxj.platform.mapper.TeacherCourseTimetableMapper;
 import cn.hkxj.platform.pojo.*;
 import cn.hkxj.platform.spider.newmodel.searchclass.ClassInfoSearchResult;
 import cn.hkxj.platform.spider.newmodel.searchclass.CourseTimetableSearchResult;
@@ -18,10 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RunWith(SpringRunner.class)
@@ -47,7 +44,7 @@ public class UrpSearchServiceTest {
     @Resource
     private ClassCourseTimetableMapper classCourseTimetableMapper;
     @Resource
-    private UrpClassMapper urpClassMapper;
+    private UrpClassDao urpClassDao;
 
     @Test
     public void searchTimetableByCourse() {
@@ -70,10 +67,17 @@ public class UrpSearchServiceTest {
     @Test
     public void searchUrpClassInfo() {
         SearchClassInfoPost post = new SearchClassInfoPost();
-        post.setExecutiveEducationPlanNum("2019-2020-1-1");
-        for (ClassInfoSearchResult result : urpSearchService.searchUrpClass(post)) {
-            urpClassMapper.insertSelective(result.transToUrpClass());
-        }
+        post.setYearNum("2014");
+        post.setExecutiveEducationPlanNum("2014-2015-1-1");
+        List<ClassInfoSearchResult> searchResults = urpSearchService.searchUrpClass(post);
+        Map<String, UrpClass> collect = searchResults.stream()
+                .map(ClassInfoSearchResult::transToUrpClass)
+                .collect(Collectors.toMap(UrpClass::getClassName, x -> x, (oldVal, newVal) -> {
+                    System.out.println(oldVal);
+                    System.out.println(newVal);
+                    return newVal;
+                }));
+        urpClassDao.insertBatch(new ArrayList<>(collect.values()));
 
     }
 

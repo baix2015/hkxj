@@ -2,6 +2,7 @@ package cn.hkxj.platform.service.wechat;
 
 import cn.hkxj.platform.dao.StudentDao;
 import cn.hkxj.platform.pojo.Student;
+import cn.hkxj.platform.pojo.StudentUser;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,6 +30,15 @@ public class StudentBindServiceTest {
         Student student = studentDao.selectStudentByAccount(2016023344);
         studentBindService.studentBind(student, "o6393wvmheXId6z3pO9hPsZrI2VQ", "test");
         assert student != null;
+    }
+
+    @Test
+    public void getStudentUserInfo() {
+        Student student = studentDao.selectStudentByAccount(2014025838);
+        StudentUser studentUserInfo = studentBindService.getStudentUserInfo(student.getAccount().toString(), student.getPassword());
+
+        System.out.println(studentUserInfo);
+
     }
 
 }

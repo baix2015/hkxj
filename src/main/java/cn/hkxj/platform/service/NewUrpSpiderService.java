@@ -3,10 +3,7 @@ package cn.hkxj.platform.service;
 import cn.hkxj.platform.dao.StudentDao;
 import cn.hkxj.platform.exceptions.PasswordUnCorrectException;
 import cn.hkxj.platform.exceptions.UrpException;
-import cn.hkxj.platform.pojo.Classes;
-import cn.hkxj.platform.pojo.Course;
-import cn.hkxj.platform.pojo.Student;
-import cn.hkxj.platform.pojo.UrpClassroom;
+import cn.hkxj.platform.pojo.*;
 import cn.hkxj.platform.spider.NewUrpSpider;
 import cn.hkxj.platform.spider.model.UrpStudentInfo;
 import cn.hkxj.platform.spider.newmodel.SearchResult;
@@ -22,21 +19,24 @@ import cn.hkxj.platform.spider.newmodel.grade.detail.UrpGradeDetailForSpider;
 import cn.hkxj.platform.spider.newmodel.grade.general.UrpGeneralGradeForSpider;
 import cn.hkxj.platform.spider.newmodel.grade.scheme.Scheme;
 import cn.hkxj.platform.spider.newmodel.searchclass.ClassInfoSearchResult;
+import cn.hkxj.platform.spider.newmodel.searchclass.CourseTimetableSearchResult;
+import cn.hkxj.platform.spider.newmodel.searchclass.SearchClassInfoPost;
 import cn.hkxj.platform.spider.newmodel.searchclassroom.SearchClassroomPost;
 import cn.hkxj.platform.spider.newmodel.searchclassroom.SearchClassroomResult;
 import cn.hkxj.platform.spider.newmodel.searchclassroom.SearchResultWrapper;
-import cn.hkxj.platform.spider.newmodel.searchclass.CourseTimetableSearchResult;
-import cn.hkxj.platform.spider.newmodel.searchclass.SearchClassInfoPost;
 import cn.hkxj.platform.spider.newmodel.searchcourse.SearchCoursePost;
 import cn.hkxj.platform.spider.newmodel.searchcourse.SearchCourseResult;
 import cn.hkxj.platform.spider.newmodel.searchteacher.SearchTeacherPost;
 import cn.hkxj.platform.spider.newmodel.searchteacher.SearchTeacherResult;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
+
+import static cn.hkxj.platform.utils.DESUtil.encrypt;
 
 /**
  * 第一次登录成功后，将学号对应session的cookie持久化
@@ -56,6 +56,8 @@ public class NewUrpSpiderService {
     private StudentDao studentDao;
     @Resource
     private OpenIdService openIdService;
+    @Value("${student.password.salt}")
+    private String key;
 
     @Retryable(value = UrpException.class, maxAttempts = 3)
     CurrentGrade getCurrentTermGrade(Student student){
@@ -194,6 +196,30 @@ public class NewUrpSpiderService {
         NewUrpSpider spider = getSpider(account, password);
 
         return getUserInfo(spider.getStudentInfo());
+    }
+
+
+    /**
+     * 获取学生信息
+     */
+    @Retryable(value = UrpException.class, maxAttempts = 3)
+    public StudentUser getStudentUserInfo(String account, String password){
+        NewUrpSpider spider = getSpider(account, password);
+        UrpStudentInfo urpStudentInfo = spider.getStudentInfo();
+
+        StudentUser studentUser = new StudentUser();
+        //首先将student原有字段赋给studentUser
+        studentUser.setAccount(urpStudentInfo.getAccount());
+        studentUser.setPassword(encrypt(urpStudentInfo.getPassword(), urpStudentInfo.getAccount().toString()+key));
+        studentUser.setName(urpStudentInfo.getName());
+        studentUser.setSex(urpStudentInfo.getSex());
+        studentUser.setEthnic(urpStudentInfo.getEthnic());
+        studentUser.setIsCorrect(true);
+
+        studentUser.setAcademyName(urpStudentInfo.getAcademy());
+        studentUser.setSubjectName(urpStudentInfo.getMajor());
+        studentUser.setClassName(urpStudentInfo.getClassname());
+        return studentUser;
     }
 
 

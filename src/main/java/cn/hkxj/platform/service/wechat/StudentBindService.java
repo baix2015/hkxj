@@ -6,9 +6,8 @@ import cn.hkxj.platform.dao.WechatOpenIdDao;
 import cn.hkxj.platform.exceptions.OpenidExistException;
 import cn.hkxj.platform.exceptions.PasswordUnCorrectException;
 import cn.hkxj.platform.exceptions.ReadTimeoutException;
-import cn.hkxj.platform.pojo.Student;
-import cn.hkxj.platform.pojo.WechatBindRecord;
-import cn.hkxj.platform.pojo.WechatOpenid;
+import cn.hkxj.platform.pojo.*;
+import cn.hkxj.platform.service.ClassService;
 import cn.hkxj.platform.service.NewUrpSpiderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,7 +36,8 @@ public class StudentBindService {
     private static final String TEXT_LINK = "<a href=\"%s\">%s</a>";
     @Resource
     private WechatBindRecordDao wechatBindRecordDao;
-
+    @Resource
+    private ClassService classService;
     /**
      * 学号与微信公众平台openID关联
      * <p>
@@ -132,6 +132,15 @@ public class StudentBindService {
             return studentDao.selectStudentByAccount(wechatOpenid.getAccount());
         }
         throw new RuntimeException("用户未绑定");
+
+    }
+
+    public StudentUser getStudentUserInfo(String account, String password){
+        StudentUser userInfo = newUrpSpiderService.getStudentUserInfo(account, password);
+        UrpClass urpClass = classService.getClassByName(userInfo.getClassName(), userInfo.getAccount().toString());
+        userInfo.setUrpclassNum(Integer.parseInt(urpClass.getClassNum()));
+
+        return userInfo;
 
     }
 
