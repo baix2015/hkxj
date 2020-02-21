@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.hkxj.platform.mapper.ext.WechatOpenIdExtMapper">
+
+    <insert id="insertBatch" parameterType="java.util.List">
+        insert  into wechat_openid
+        (<include refid="cn.hkxj.platform.mapper.WechatOpenidMapper.Base_Column_List"/>)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.id,jdbcType=INTEGER},
+            #{item.openid,jdbcType=VARCHAR},
+            #{item.account,jdbcType=INTEGER},
+            #{item.gmtCreate,jdbcType=TIMESTAMP},
+            #{item.gmtModified,jdbcType=TIMESTAMP},
+            #{item.isBind,jdbcType=BIT},
+            #{item.appid,jdbcType=VARCHAR})
+        </foreach>
+
+    </insert>
+
+</mapper>
