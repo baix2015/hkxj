@@ -2,17 +2,17 @@ package cn.hkxj.platform.utils;
 
 import cn.hkxj.platform.pojo.SchoolTime;
 import cn.hkxj.platform.pojo.Term;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.CharUtils;
 import org.springframework.stereotype.Component;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 /**
  * @author Yuki
@@ -23,7 +23,7 @@ import java.util.*;
 @Slf4j
 public class DateUtils {
 
-    private final static String term_start = "2019-08-26";
+    private final static String term_start = "2020-03-02";
 
     public final static String YYYY_MM_DD_PATTERN = "yyyyMMdd";
 
@@ -47,7 +47,8 @@ public class DateUtils {
         }
         long start = calendar.getTimeInMillis();
         long end = Calendar.getInstance().getTimeInMillis();
-        return (int) Math.ceil(((end - start) / 1000 / 60 / 60 / 24 / 7)) + 1;
+        int result = (int) Math.ceil(((end - start) / 1000 / 60 / 60 / 24 / 7)) + 1;
+        return Math.max(result, 1);
     }
 
     /**
@@ -96,7 +97,7 @@ public class DateUtils {
         SchoolTime schoolTime = new SchoolTime();
         schoolTime.setDay(getCurrentDay());
         schoolTime.setWeek(getCurrentWeek());
-        schoolTime.setTerm(new Term(2019, 2020, 1));
+        schoolTime.setTerm(new Term(2019, 2020, 2));
         return schoolTime;
     }
 

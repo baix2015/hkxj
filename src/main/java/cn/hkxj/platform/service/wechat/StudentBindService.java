@@ -1,32 +1,20 @@
 package cn.hkxj.platform.service.wechat;
 
-import cn.hkxj.platform.config.wechat.MiniProgramProperties;
-import cn.hkxj.platform.config.wechat.WechatMpPlusProperties;
-import cn.hkxj.platform.config.wechat.WechatMpProProperties;
-import cn.hkxj.platform.dao.MiniProgramOpenIdDao;
 import cn.hkxj.platform.dao.StudentDao;
 import cn.hkxj.platform.dao.WechatBindRecordDao;
+import cn.hkxj.platform.dao.WechatOpenIdDao;
 import cn.hkxj.platform.exceptions.OpenidExistException;
 import cn.hkxj.platform.exceptions.PasswordUnCorrectException;
 import cn.hkxj.platform.exceptions.ReadTimeoutException;
-import cn.hkxj.platform.mapper.OpenidMapper;
-import cn.hkxj.platform.mapper.OpenidPlusMapper;
-import cn.hkxj.platform.pojo.MiniProgramOpenid;
-import cn.hkxj.platform.pojo.ScheduleTask;
-import cn.hkxj.platform.pojo.Student;
-import cn.hkxj.platform.pojo.WechatBindRecord;
-import cn.hkxj.platform.pojo.constant.SubscribeScene;
-import cn.hkxj.platform.pojo.example.OpenidExample;
-import cn.hkxj.platform.pojo.wechat.Openid;
+import cn.hkxj.platform.pojo.*;
+import cn.hkxj.platform.service.ClassService;
 import cn.hkxj.platform.service.NewUrpSpiderService;
-import cn.hkxj.platform.service.ScheduleTaskService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.List;
-import java.util.Objects;
+import java.util.Date;
 
 /**
  * @author junrong.chen
@@ -35,18 +23,10 @@ import java.util.Objects;
 @Service("studentBindService")
 @Slf4j
 public class StudentBindService {
-    private static final String template = "account: %s openid: %s is exist";
-
-    @Resource
-    private OpenidMapper openidMapper;
-    @Resource
-    private OpenidPlusMapper openidPlusMapper;
-    @Resource
-    private WechatMpPlusProperties wechatMpPlusProperties;
-    @Resource
-    private WechatMpProProperties wechatMpProProperties;
     @Resource
     private StudentDao studentDao;
+    @Resource
+    private WechatOpenIdDao wechatOpenIdDao;
     @Resource
     private NewUrpSpiderService newUrpSpiderService;
     @Value("${domain}")
@@ -55,14 +35,9 @@ public class StudentBindService {
 
     private static final String TEXT_LINK = "<a href=\"%s\">%s</a>";
     @Resource
-    private ScheduleTaskService scheduleTaskService;
-    @Resource
-    private MiniProgramProperties miniProgramProperties;
-    @Resource
-    private MiniProgramOpenIdDao miniProgramOpenIdDao;
-    @Resource
     private WechatBindRecordDao wechatBindRecordDao;
-
+    @Resource
+    private ClassService classService;
     /**
      * 学号与微信公众平台openID关联
      * <p>
@@ -81,12 +56,6 @@ public class StudentBindService {
      * @throws OpenidExistException       Openid已存在
      */
     public Student studentBind(String openid, String account, String password, String appid) throws OpenidExistException {
-        if (miniProgramProperties.getAppId().equals(appid)) {
-
-
-        } else if (isStudentBind(openid, appid)) {
-            throw new OpenidExistException(String.format(template, account, openid));
-        }
 
         Student student = studentLogin(account, password);
 
@@ -95,7 +64,6 @@ public class StudentBindService {
         return student;
 
     }
-
 
     /**
      * 用于学生从非微信渠道登录
@@ -108,10 +76,8 @@ public class StudentBindService {
         Student student = studentDao.selectStudentByAccount(Integer.parseInt(account));
 
         if (student != null && (!student.getIsCorrect() || !student.getPassword().equals(password))) {
-
             newUrpSpiderService.checkStudentPassword(account, password);
             studentDao.updatePassword(account, password);
-
         } else if (student == null) {
             student = newUrpSpiderService.getStudentInfo(account, password);
             studentDao.insertStudent(student);
@@ -121,112 +87,60 @@ public class StudentBindService {
     }
 
     /**
-     * 如果已经存在openid则重新关联绑定，否则插入一条新数据再绑定
+     * 如果已经存在openid则更新关联的学号
+     * 并且插入一条更新的记录
+     *
+     * 否则插入一条新数据再绑定
      *
      * @param student 学生信息
      * @param openid  微信用户唯一标识
      * @param appid   微信平台对应的id
      */
-    private void studentBind(Student student, String openid, String appid) {
-        boolean haveOpenId;
-        if (Objects.equals(wechatMpPlusProperties.getAppId(), appid)) {
-            haveOpenId = openidPlusMapper.isOpenidExist(openid) != null && openidPlusMapper.isOpenidBind(openid) == 0;
-        } else if (Objects.equals(wechatMpProProperties.getAppId(), appid)) {
-            haveOpenId = openidMapper.isOpenidExist(openid) != null && openidMapper.isOpenidBind(openid) == 0;
-        } else if (Objects.equals(miniProgramProperties.getAppId(), appid)) {
-            haveOpenId = miniProgramOpenIdDao.isOpenidExist(openid);
-        } else {
-            throw new RuntimeException("unSupport appid: " + appid);
-        }
+     void studentBind(Student student, String openid, String appid) {
+        WechatOpenid wechatOpenid = wechatOpenIdDao.selectByUniqueKey(appid, openid);
+        if (wechatOpenid != null) {
+            if (!student.getAccount().equals(wechatOpenid.getAccount())){
+                wechatOpenIdDao.updateByPrimaryKeySelective(
+                        wechatOpenid.setAccount(student.getAccount()).setGmtModified(new Date()));
 
-        if (haveOpenId) {
-            updateOpenid(openid, student.getAccount().toString(), appid);
+                wechatBindRecordDao.insertSelective(new WechatBindRecord()
+                        .setOriginAccount(wechatOpenid.getAccount().toString())
+                        .setUpdateAccount(student.getAccount().toString())
+                        .setAppid(appid).setOpenid(openid));
+            }
         } else {
-            saveOpenid(openid, student.getAccount().toString(), appid);
+            wechatOpenIdDao.insertSelective(new WechatOpenid()
+                    .setAccount(student.getAccount())
+                    .setOpenid(openid)
+                    .setAppid(appid));
         }
 
     }
 
     public boolean isStudentBind(String openid, String appid) {
-        List<Openid> openids = getOpenID(openid, appid);
-        if (openids.size() == 0)
+        WechatOpenid wechatOpenid = wechatOpenIdDao.selectByUniqueKey(appid, openid);
+        if (wechatOpenid == null) {
             return false;
-        else {
-            Openid openidEntity = openids.get(0);
-            return openidEntity.getIsBind();
+        } else {
+            return wechatOpenid.getIsBind();
         }
     }
 
     public Student getStudentByOpenID(String openid, String appid) {
-        List<Openid> openidList = getOpenID(openid, appid);
-        if (openidList.size() != 0) {
-            return studentDao.selectStudentByAccount(openidList.get(0).getAccount());
+        WechatOpenid wechatOpenid = wechatOpenIdDao.selectByUniqueKey(appid, openid);
+        if (wechatOpenid != null) {
+            return studentDao.selectStudentByAccount(wechatOpenid.getAccount());
         }
         throw new RuntimeException("用户未绑定");
 
     }
 
-    private List<Openid> getOpenID(String openid, String appid) {
-        OpenidExample openidExample = new OpenidExample();
-        openidExample
-                .createCriteria()
-                .andOpenidEqualTo(openid);
-        if (Objects.equals(wechatMpPlusProperties.getAppId(), appid)) {
-            return openidPlusMapper.selectByExample(openidExample);
-        }
-        return openidMapper.selectByExample(openidExample);
-    }
+    public StudentUser getStudentUserInfo(String account, String password){
+        StudentUser userInfo = newUrpSpiderService.getStudentUserInfo(account, password);
+        UrpClass urpClass = classService.getClassByName(userInfo.getClassName(), userInfo.getAccount().toString());
+        userInfo.setUrpclassNum(Integer.parseInt(urpClass.getClassNum()));
 
-    private void saveOpenid(String openid, String account, String appid) {
-        Openid save = new Openid();
-        save.setOpenid(openid);
-        save.setAccount(Integer.parseInt(account));
-        save.setIsBind(true);
-        if (Objects.equals(wechatMpPlusProperties.getAppId(), appid)) {
-            subscribeGradeUpdateTask(openid, appid);
-            openidPlusMapper.insertSelective(save);
-        } else if (Objects.equals(wechatMpProProperties.getAppId(), appid)) {
-            openidMapper.insertSelective(save);
-        } else if (Objects.equals(miniProgramProperties.getAppId(), appid)) {
-            miniProgramOpenIdDao.insertSelective(new MiniProgramOpenid().setOpenid(openid).setAccount(Integer.parseInt(account)));
-        } else {
-            throw new RuntimeException("unSupport appid: " + appid);
-        }
-
-    }
-
-    private void updateOpenid(String openid, String account, String appid) {
-        Openid update = null;
-        String origin = null;
-        if (!Objects.equals(miniProgramProperties.getAppId(), appid)) {
-            update = getOpenID(openid, appid).get(0);
-            update.setAccount(Integer.parseInt(account));
-            update.setIsBind(true);
-            origin = update.getAccount().toString();
-        }
-
-
-        if (Objects.equals(wechatMpPlusProperties.getAppId(), appid)) {
-            openidPlusMapper.updateByPrimaryKey(update);
-        } else if (Objects.equals(wechatMpProProperties.getAppId(), appid)) {
-            openidMapper.updateByPrimaryKey(update);
-        } else if (Objects.equals(miniProgramProperties.getAppId(), appid)) {
-            MiniProgramOpenid miniProgramOpenid = miniProgramOpenIdDao.selectByOpenId(openid);
-            origin = miniProgramOpenid.getAccount().toString();
-            if (!miniProgramOpenid.getAccount().toString().equals(account)) {
-                miniProgramOpenIdDao.updateByPrimaryKey(miniProgramOpenid.setAccount(Integer.parseInt(account)).setGmtModified(null));
-            } else {
-                return;
-            }
-
-        } else {
-            throw new RuntimeException("unSupport appid: " + appid);
-        }
-
-        wechatBindRecordDao.insertSelective(new WechatBindRecord()
-                .setOriginAccount(origin)
-                .setUpdateAccount(account)
-                .setAppid(appid).setOpenid(openid));
+        return userInfo;
 
     }
 
@@ -236,11 +150,6 @@ public class StudentBindService {
 
     public String getTextLink(String url, String content) {
         return String.format(TEXT_LINK, url, content);
-    }
-
-    private void subscribeGradeUpdateTask(String openid, String appid) {
-        ScheduleTask scheduleTask = new ScheduleTask(appid, openid, SubscribeScene.GRADE_AUTO_UPDATE.getScene());
-        scheduleTaskService.checkAndSetSubscribeStatus(scheduleTask, true);
     }
 
 }

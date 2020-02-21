@@ -1,6 +1,5 @@
 package cn.hkxj.platform.utils;
 
-import cn.hkxj.platform.PlatformApplication;
 import cn.hkxj.platform.dao.StudentDao;
 import cn.hkxj.platform.dao.StudentUserDao;
 import cn.hkxj.platform.dao.UrpClassDao;
@@ -13,9 +12,7 @@ import cn.hkxj.platform.spider.model.UrpStudentInfo;
 import cn.hkxj.platform.spider.newmodel.SearchResult;
 import cn.hkxj.platform.spider.newmodel.searchclass.ClassInfoSearchResult;
 import cn.hkxj.platform.spider.newmodel.searchclass.SearchClassInfoPost;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -24,7 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import static cn.hkxj.platform.utils.DESUtil.DESEncrypt;
+
+import static cn.hkxj.platform.utils.DESUtil.encrypt;
 
 @Component
 public class StudentUserMigrationUtil{
@@ -56,7 +54,7 @@ public class StudentUserMigrationUtil{
                 StudentUser studentUser = new StudentUser();
                 //首先将student原有字段赋给studentUser
                 studentUser.setAccount(student.getAccount());
-                studentUser.setPassword(DESEncrypt(student.getAccount().toString(), student.getPassword()));
+                studentUser.setPassword(encrypt(student.getAccount().toString(), student.getPassword()));
                 studentUser.setName(student.getName());
                 studentUser.setSex(student.getSex());
                 studentUser.setEthnic(student.getEthnic());

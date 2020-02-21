@@ -3,13 +3,14 @@ package cn.hkxj.platform.dao;
 import cn.hkxj.platform.mapper.CourseMapper;
 import cn.hkxj.platform.pojo.Course;
 import cn.hkxj.platform.pojo.example.CourseExample;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.Optional;
 
 @Service
+@Slf4j
 public class CourseDao {
     @Resource
     private CourseMapper courseMapper;
@@ -44,6 +45,11 @@ public class CourseDao {
     }
 
     public void insertSelective(Course course){
-        courseMapper.insertSelective(course);
+        try {
+            courseMapper.insertSelective(course);
+        }catch (Exception e){
+            log.error("error data {}", course, e);
+        }
+
     }
 }

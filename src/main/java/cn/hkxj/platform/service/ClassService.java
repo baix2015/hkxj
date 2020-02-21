@@ -3,11 +3,17 @@ package cn.hkxj.platform.service;
 import cn.hkxj.platform.dao.ClassDao;
 import cn.hkxj.platform.dao.UrpClassDao;
 import cn.hkxj.platform.mapper.ClassesMapper;
-import cn.hkxj.platform.pojo.*;
+import cn.hkxj.platform.pojo.Classes;
+import cn.hkxj.platform.pojo.Student;
+import cn.hkxj.platform.pojo.Subject;
+import cn.hkxj.platform.pojo.UrpClass;
 import cn.hkxj.platform.pojo.constant.Academy;
 import cn.hkxj.platform.pojo.constant.RedisKeys;
 import cn.hkxj.platform.spider.model.UrpStudentInfo;
 import cn.hkxj.platform.spider.newmodel.searchclass.ClassInfoSearchResult;
+import cn.hkxj.platform.spider.newmodel.searchclass.SearchClassInfoPost;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.HashOperations;
@@ -15,8 +21,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author JR Chan
@@ -35,7 +44,47 @@ public class ClassService {
     private UrpClassDao urpClassDao;
     @Resource
     private ClassesMapper classesMapper;
+    @Resource
+    private UrpSearchService urpSearchService;
 
+
+    private static final Cache<String, UrpClass> classCache = CacheBuilder.newBuilder()
+            .maximumSize(200)
+            .build();
+
+
+    public UrpClass getClassByName(String className, String account){
+
+        try{
+            return classCache.get(className, ()-> {
+                UrpClass urpClass = urpClassDao.selectByName(className);
+
+                if (urpClass != null){
+                    return urpClass;
+                }
+
+                SearchClassInfoPost post = new SearchClassInfoPost();
+                String start = account.substring(0, 4);
+                int end = Integer.parseInt(start) + 1;
+                post.setYearNum(start);
+                post.setExecutiveEducationPlanNum(start + "-"+ end + "-1-1");
+                List<ClassInfoSearchResult> results = urpSearchService.searchUrpClass(post);
+                Map<String, UrpClass> collect = results.stream()
+                        .map(ClassInfoSearchResult::transToUrpClass)
+                        .collect(Collectors.toMap(UrpClass::getClassName, x -> x));
+
+                classCache.putAll(collect);
+                urpClassDao.insertBatch(new ArrayList<>(collect.values()));
+
+
+                return collect.get(className);
+            });
+        }catch (Exception e){
+            log.error("get className {} exception", className, e);
+            throw new RuntimeException(e);
+        }
+
+    }
 
     private static Classes parseText(String classname) {
         String[] clazzSplitter = classname.split("-");
@@ -150,6 +199,8 @@ public class ClassService {
 
         return classes;
     }
+
+
 
     public UrpClass getUrpClassByStudent(Student student){
         HashOperations<String, String, String> hash = redisTemplate.opsForHash();
