@@ -1,5 +1,6 @@
 package cn.hkxj.platform.pojo;
 
+import cn.hkxj.platform.utils.DateUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -51,5 +52,12 @@ public class CourseTimetable {
 
     @EqualsAndHashCode.Exclude
     private Date gmtCreate;
+
+
+    public boolean isCurrentTerm(){
+        Term term = DateUtils.getCurrentSchoolTime().getTerm();
+        return getTermOrder().equals(term.getOrder()) &&
+                getTermYear().equals(term.getTermYear());
+    }
 
 }

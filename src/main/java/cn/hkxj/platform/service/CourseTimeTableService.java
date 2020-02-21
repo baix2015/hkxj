@@ -116,8 +116,19 @@ public class CourseTimeTableService {
             if (!hasSchoolCourse(tableForSpider)) {
                 return getCurrentTermCourseTimetableVOByClazz(student);
             } else {
-                List<CourseTimetable> list = getCourseTimetableList(tableForSpider);
-                saveCourseTimeTableDetailsFromSearch(list, student);
+
+                List<CourseTimetable> list = tableForSpider.adaptToList();
+                list.forEach(x -> {
+                    UrpClassroom room = roomService.getClassRoomByName(x.getRoomName());
+                    x.setRoomNumber(room == null ? "" : room.getNumber());
+                });
+
+                List<CourseTimetable> current = list.stream()
+                        .filter(CourseTimetable::isCurrentTerm)
+                        .collect(Collectors.toList());
+                if (!CollectionUtils.isEmpty(current)){
+                    saveCourseTimeTableDetailsFromSearch(current, student);
+                }
                 return transCourseTimeTableToVo(list);
             }
 
@@ -156,18 +167,6 @@ public class CourseTimeTableService {
     public List<CourseTimeTableVo> getCourseTimeTableByCourse(String courseId, String courseOrder) {
         List<CourseTimetable> courseTimetableList = courseTimeTableDao.selectByCourseTimetable(new CourseTimetable().setCourseId(courseId).setCourseSequenceNumber(courseOrder));
         return transCourseTimeTableToVo(courseTimetableList);
-    }
-
-    List<CourseTimetable> getCourseTimetableList(UrpCourseTimeTableForSpider tableForSpider) {
-        return tableForSpider.getDetails()
-                .stream()
-                .flatMap(x -> x.values().stream().map(UrpCourseTimeTable::adapterToCourseTimetable))
-                .flatMap(Collection::stream)
-                .peek(x -> {
-                    UrpClassroom room = roomService.getClassRoomByName(x.getRoomName());
-                    x.setRoomNumber(room == null ? "" : room.getNumber());
-                })
-                .collect(Collectors.toList());
     }
 
     public List<CourseTimeTableVo> transCourseTimeTableToVo(List<CourseTimetable> courseTimetableList) {

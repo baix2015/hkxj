@@ -1,11 +1,13 @@
 package cn.hkxj.platform.spider.newmodel.coursetimetable;
 
+import cn.hkxj.platform.pojo.CourseTimetable;
 import com.alibaba.fastjson.annotation.JSONField;
 import lombok.Data;
 
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Yuki
@@ -23,5 +25,14 @@ public class UrpCourseTimeTableForSpider {
      */
     @JSONField(name = "xkxx")
     private List<HashMap<String, UrpCourseTimeTable>> details;
+
+
+    public List<CourseTimetable> adaptToList(){
+
+        return details.stream()
+                .flatMap(x -> x.values().stream().map(UrpCourseTimeTable::adapterToCourseTimetable))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+    }
 
 }

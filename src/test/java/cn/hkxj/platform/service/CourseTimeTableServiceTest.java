@@ -18,6 +18,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Yuki
@@ -97,9 +98,11 @@ public class CourseTimeTableServiceTest {
     @Test
     public void fixErrorData() {
         // 按学生分好组，然后再进行抓取
-        UrpCourseTimeTableForSpider details = courseTimeTableService.getCourseTimeTableDetails(studentDao.selectStudentByAccount(2017026003));
-        List<CourseTimetable> list = courseTimeTableService.getCourseTimetableList(details);
-        courseTimeTableService.getCourseTimetableIdList(list);
+        UrpCourseTimeTableForSpider details = courseTimeTableService.getCourseTimeTableDetails(studentDao.selectStudentByAccount(2018026135));
+        List<CourseTimetable> collect = details.adaptToList().stream().filter(CourseTimetable::isCurrentTerm).collect(Collectors.toList());
+
+        System.out.println(collect.size());
+
 
     }
 
