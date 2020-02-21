@@ -6,12 +6,16 @@ import cn.hkxj.platform.pojo.example.UrpClassExample;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 @Service
 public class UrpClassDao {
     @Resource
     private UrpClassMapper urpClassMapper;
 
+    public List<UrpClass> selectAllClass(){
+        return urpClassMapper.selectByExample(new UrpClassExample());
+    }
 
     public UrpClass selectByClassNumber(String classNumber){
         UrpClassExample example = new UrpClassExample();
@@ -29,6 +33,10 @@ public class UrpClassDao {
                 .andClassNameEqualTo(name);
 
         return urpClassMapper.selectByExample(example).stream().findFirst().orElse(null);
+    }
+
+    public void insertSelective(UrpClass urpClass){
+        urpClassMapper.insertSelective(urpClass);
     }
 
 }
